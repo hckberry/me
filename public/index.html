@@ -210,9 +210,11 @@ const send = m => { if (S.ws && S.ws.readyState===1) S.ws.send(JSON.stringify(m)
 
 /* ---------- servers ---------- */
 const SERVERS = [
-  {name:'VidSrc.to', id:'imdb', m:i=>`https://vidsrc.to/embed/movie/${i}`, t:(i,s,e)=>`https://vidsrc.to/embed/tv/${i}/${s}/${e}`}
+  {name:'Server 1', id:'imdb', m:i=>`https://vidsrc.to/embed/movie/${i}`,       t:(i,s,e)=>`https://vidsrc.to/embed/tv/${i}/${s}/${e}`},
+  {name:'Server 2', id:'imdb', m:i=>`https://vidsrc.net/embed/movie?imdb=${i}`,  t:(i,s,e)=>`https://vidsrc.net/embed/tv?imdb=${i}&season=${s}&episode=${e}`},
+  {name:'Server 3', id:'imdb', m:i=>`https://vidsrc.xyz/embed/movie/${i}`,       t:(i,s,e)=>`https://vidsrc.xyz/embed/tv?imdb=${i}&season=${s}&episode=${e}`}
 ];
-$('#serverSelect').innerHTML = SERVERS.map((v,n)=>`<option value="${n}">(${n+1}) ${v.name}</option>`).join('');
+$('#serverSelect').innerHTML = SERVERS.map((v,n)=>`<option value="${n}">${v.name}</option>`).join('');
 const tmdbCache = {};
 async function tmdbFor(kind, imdb){
   const k = kind+imdb; if (tmdbCache[k]) return tmdbCache[k];
@@ -232,7 +234,7 @@ async function play(kind, imdb, s, e, name){
 }
 function nextServer(){
   const sel=$('#serverSelect'); sel.value = (+sel.value + 1) % SERVERS.length;
-  toast('Trying (' + (+sel.value+1) + ') ' + SERVERS[+sel.value].name);
+  toast('Trying ' + SERVERS[+sel.value].name);
   if (S.last) play(S.last.kind, S.last.imdb, S.last.s, S.last.e, S.last.name);
 }
 function requestPlay(url, name){
@@ -241,14 +243,27 @@ function requestPlay(url, name){
 }
 
 /* ---------- search ---------- */
+/* forgiving fallback search (handles hyphens, typos, numbers) */
+async function imdbSearch(q){
+  try {
+    const c = q.trim().toLowerCase();
+    const first = /^[a-z0-9]/.test(c) ? c[0] : 'x';
+    const r = await fetch(`https://v3.sg.media-imdb.com/suggestion/${first}/${encodeURIComponent(c)}.json`);
+    const j = await r.json();
+    const types = S.kind==='movie' ? ['movie','tvMovie'] : ['tvSeries','tvMiniSeries'];
+    return (j.d||[]).filter(x => /^tt/.test(x.id) && types.includes(x.qid))
+      .map(x => ({imdb_id:x.id, name:x.l, releaseInfo:x.y, poster:x.i && x.i.imageUrl}));
+  } catch(e){ return []; }
+}
 async function doSearch(q){
   const box=$('#searchResults'); box.innerHTML='<div class="msgline">Searching…</div>';
   try {
-    const r = await fetch(`${META}/catalog/${S.kind}/top/search=${encodeURIComponent(q)}.json`);
-    const j = await r.json();
-    if (!j.metas || !j.metas.length){ box.innerHTML='<div class="msgline">No results for “'+esc(q)+'”.</div>'; return; }
+    let metas = [];
+    try { const r = await fetch(`${META}/catalog/${S.kind}/top/search=${encodeURIComponent(q)}.json`); const j = await r.json(); metas = j.metas || []; } catch(e){}
+    if (!metas.length) metas = await imdbSearch(q);
+    if (!metas.length){ box.innerHTML='<div class="msgline">No results for “'+esc(q)+'”. Try a different spelling.</div>'; return; }
     box.innerHTML='<div class="grid"></div>'; const grid=box.firstChild;
-    j.metas.slice(0,18).forEach(m=>{
+    metas.slice(0,18).forEach(m=>{
       const id = m.imdb_id || m.id;
       const b=document.createElement('button'); b.className='card';
       b.innerHTML=`<div class="img" style="${m.poster?`background-image:url('${esc(m.poster)}')`:''}"></div><div class="t">${esc(m.name)}</div><div class="y">${esc(m.releaseInfo||m.year||'')}</div>`;
