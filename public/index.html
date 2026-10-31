@@ -214,9 +214,17 @@ const SERVERS = [
     m: i => `https://vidsrc.to/embed/movie/${i}`, 
     t: (i,s,e) => `https://vidsrc.to/embed/tv/${i}/${s}/${e}` },
     
+  { name: 'EmbedMaster', id: 'imdb', 
+    m: i => `https://embedmaster.link/movie/${i}`, 
+    t: (i,s,e) => `https://embedmaster.link/tv/${i}/${s}/${e}` },
+    
   { name: 'VidLink', id: 'imdb', 
     m: i => `https://vidlink.pro/movie/${i}`, 
     t: (i,s,e) => `https://vidlink.pro/tv/${i}/${s}/${e}` },
+    
+  { name: 'VidFast', id: 'imdb', 
+    m: i => `https://vidfast.pro/movie/${i}`, 
+    t: (i,s,e) => `https://vidfast.pro/tv/${i}/${s}/${e}` },
     
   { name: '2Embed', id: 'imdb', 
     m: i => `https://www.2embed.cc/embed/${i}`, 
@@ -226,21 +234,9 @@ const SERVERS = [
     m: i => `https://autoembed.co/movie/imdb/${i}`, 
     t: (i,s,e) => `https://autoembed.co/tv/imdb/${i}-${s}-${e}` },
     
-  { name: 'SuperEmbed', id: 'imdb', 
-    m: i => `https://getsuperembed.link/?video_id=${i}`, 
-    t: (i,s,e) => `https://getsuperembed.link/?video_id=${i}&s=${s}&e=${e}` },
-    
-  { name: 'VidSrc (Mov)', id: 'imdb', 
-    m: i => `https://vidsrc.mov/embed/movie/${i}`, 
-    t: (i,s,e) => `https://vidsrc.mov/embed/tv/${i}/${s}/${e}` },
-    
-  { name: 'EmbedMaster', id: 'imdb', 
-    m: i => `https://embedmaster.link/movie/${i}`, 
-    t: (i,s,e) => `https://embedmaster.link/tv/${i}/${s}/${e}` },
-    
-  { name: 'MultiEmbed', id: 'imdb', 
-    m: i => `https://multiembed.mov/?video_id=${i}`, 
-    t: (i,s,e) => `https://multiembed.mov/?video_id=${i}&s=${s}&e=${e}` }
+  { name: 'VidNest', id: 'imdb', 
+    m: i => `https://vidnest.fun/movie/${i}`, 
+    t: (i,s,e) => `https://vidnest.fun/tv/${i}/${s}/${e}` }
 ];
 $('#serverSelect').innerHTML = SERVERS.map((v,n)=>`<option value="${n}">${v.name}</option>`).join('');
 const tmdbCache = {};
